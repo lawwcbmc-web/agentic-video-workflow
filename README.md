@@ -105,7 +105,7 @@ The included workflow accepts a job only when `approvals.brief` is `approved`. I
 - Add per-job budgets and provider cost ceilings.
 - Scan generated media and verify rights for uploaded assets.
 - Add caption, accessibility, factual, privacy, and clinical/legal reviews as applicable.
-- Pin dependency versions and use a lockfile (included).
+- Pin dependency versions and commit a reviewed lockfile before production deployment.
 - Publish through least-privilege service accounts.
 
 ## Important limitation
