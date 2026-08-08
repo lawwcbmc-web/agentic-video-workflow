@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/video-job.schema.json",
+  "title": "Agentic video job",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "objective", "audience", "format", "scenes", "approvals"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+    "title": {"type": "string", "minLength": 3},
+    "objective": {"type": "string", "minLength": 10},
+    "audience": {"type": "string", "minLength": 3},
+    "format": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "fps"],
+      "properties": {
+        "width": {"type": "integer", "minimum": 320},
+        "height": {"type": "integer", "minimum": 320},
+        "fps": {"type": "integer", "minimum": 15, "maximum": 60}
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "durationSeconds", "heading", "body"],
+        "properties": {
+          "id": {"type": "string"},
+          "durationSeconds": {"type": "number", "exclusiveMinimum": 0},
+          "heading": {"type": "string"},
+          "body": {"type": "string"},
+          "voiceover": {"type": "string"},
+          "assetPrompt": {"type": "string"}
+        }
+      }
+    },
+    "providers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "presenter": {"enum": ["none", "heygen-placeholder"]},
+        "design": {"enum": ["none", "canva-placeholder"]}
+      }
+    },
+    "approvals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["brief", "paidGeneration", "publish"],
+      "properties": {
+        "brief": {"enum": ["pending", "approved", "rejected"]},
+        "paidGeneration": {"enum": ["pending", "approved", "rejected"]},
+        "publish": {"enum": ["pending", "approved", "rejected"]}
+      }
+    }
+  }
+}

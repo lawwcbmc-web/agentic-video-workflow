@@ -1,0 +1,28 @@
+{
+  "name": "agentic-video-workflow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate": "node --import tsx src/orchestrator.ts validate jobs/sample-job.json",
+    "plan": "node --import tsx src/orchestrator.ts plan jobs/sample-job.json",
+    "render": "remotion render src/remotion/index.ts MainVideo out/video.mp4 --props=jobs/sample-job.json",
+    "check:ffmpeg": "node scripts/check-ffmpeg.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && npm run validate && npm run check:ffmpeg"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/renderer": "^4.0.0",
+    "ajv": "^8.17.1",
+    "remotion": "^4.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

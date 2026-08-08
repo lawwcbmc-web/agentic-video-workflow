@@ -1,0 +1,14 @@
+{
+  "id": "sample-stroke-awareness",
+  "title": "Recognise Stroke FAST",
+  "objective": "Create a concise public education video explaining the FAST warning signs.",
+  "audience": "General public",
+  "format": {"width": 1080, "height": 1920, "fps": 30},
+  "providers": {"presenter": "none", "design": "none"},
+  "scenes": [
+    {"id": "hook", "durationSeconds": 3, "heading": "Stroke can happen suddenly", "body": "Every minute matters."},
+    {"id": "fast", "durationSeconds": 8, "heading": "Think FAST", "body": "Face drooping • Arm weakness • Speech difficulty • Time to call emergency services."},
+    {"id": "action", "durationSeconds": 4, "heading": "Act immediately", "body": "Note the time symptoms started and seek emergency care."}
+  ],
+  "approvals": {"brief": "approved", "paidGeneration": "pending", "publish": "pending"}
+}

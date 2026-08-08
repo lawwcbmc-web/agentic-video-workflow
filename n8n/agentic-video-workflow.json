@@ -1,0 +1,36 @@
+{
+  "name": "Agentic Video Workflow Starter",
+  "nodes": [
+    {
+      "parameters": {"httpMethod": "POST", "path": "video-job", "responseMode": "lastNode"},
+      "id": "webhook",
+      "name": "Receive approved brief",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {"jsCode": "const job = $json.body ?? $json;\nif (job?.approvals?.brief !== 'approved') throw new Error('Brief approval required');\nreturn [{json: job}];"},
+      "id": "brief-gate",
+      "name": "Brief approval gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {"respondWith": "json", "responseBody": "={{ {accepted: true, jobId: $json.id, next: 'Run local validation and Remotion render'} }}"},
+      "id": "respond",
+      "name": "Acknowledge job",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [740, 300]
+    }
+  ],
+  "connections": {
+    "Receive approved brief": {"main": [[{"node": "Brief approval gate", "type": "main", "index": 0}]]},
+    "Brief approval gate": {"main": [[{"node": "Acknowledge job", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "versionId": "00000000-0000-4000-8000-000000000001"
+}
