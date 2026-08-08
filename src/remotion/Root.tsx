@@ -1,7 +1,7 @@
 import React from "react";
 import {Composition} from "remotion";
 import {MainVideo, type VideoJob} from "./Video.js";
-import sample from "../../jobs/sample-job.json";
+import sample from "../../jobs/sample-job.json" with {type: "json"};
 
 export const VideoRoot: React.FC = () => {
   const job = sample as VideoJob;
