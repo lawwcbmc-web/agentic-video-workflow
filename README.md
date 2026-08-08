@@ -2,6 +2,18 @@
 
 An approval-gated starter for directing, orchestrating, assembling, and publishing AI-assisted videos. ChatGPT/Codex acts as director, n8n coordinates jobs, Remotion assembles deterministic video, and FFmpeg handles media inspection and post-processing. Canva and HeyGen are safe placeholders: this repository does not call paid generation or publish anything by default.
 
+## Prompt-to-video interface
+
+Phase 2 adds a local browser interface. Start it with:
+
+```bash
+cp .env.example .env
+npm install
+npm start
+```
+
+Open `http://127.0.0.1:3000`, enter one prompt, review the generated scenes, approve the brief, and render the MP4. Demo director mode works without an API key. To opt into OpenAI structured scripting, set `OPENAI_API_KEY`, choose `OPENAI_MODEL`, set `ALLOW_AI_SCRIPTING=true`, and select the OpenAI director checkbox. Keep secrets server-side and review API usage and costs.
+
 ## Safety model
 
 Every job carries three independent human decisions:
