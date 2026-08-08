@@ -1,6 +1,6 @@
 import {readFile, mkdir, writeFile} from "node:fs/promises";
 import path from "node:path";
-import Ajv from "ajv";
+import {Ajv2020} from "ajv/dist/2020.js";
 import schema from "../schemas/job.schema.json" with {type: "json"};
 
 type Approval = "pending" | "approved" | "rejected";
@@ -17,8 +17,8 @@ type Job = {
 const loadJob = async (filename: string): Promise<Job> => {
   const raw = await readFile(filename, "utf8");
   const job: unknown = JSON.parse(raw);
-  const validate = new Ajv({allErrors: true, strict: false}).compile(schema);
-  if (!validate(job)) throw new Error(Ajv.errorsText(validate.errors, {separator: "\n"}));
+  const validate = new Ajv2020({allErrors: true, strict: false}).compile(schema);
+  if (!validate(job)) throw new Error(JSON.stringify(validate.errors, null, 2));
   return job as Job;
 };
 
