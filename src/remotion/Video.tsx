@@ -3,7 +3,7 @@ import {AbsoluteFill, Sequence, interpolate, useCurrentFrame} from "remotion";
 
 export type VideoJob = {
   title: string;
-  format: {fps: number};
+  format: {width: number; height: number; fps: number};
   scenes: Array<{id: string; durationSeconds: number; heading: string; body: string}>;
 };
 
