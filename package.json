@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "validate": "tsx src/orchestrator.ts validate jobs/sample-job.json",
-    "plan": "tsx src/orchestrator.ts plan jobs/sample-job.json",
+    "validate": "node --import tsx src/orchestrator.ts validate jobs/sample-job.json",
+    "plan": "node --import tsx src/orchestrator.ts plan jobs/sample-job.json",
     "render": "remotion render src/remotion/index.ts MainVideo out/video.mp4 --props=jobs/sample-job.json",
     "check:ffmpeg": "node scripts/check-ffmpeg.mjs",
     "typecheck": "tsc --noEmit",
