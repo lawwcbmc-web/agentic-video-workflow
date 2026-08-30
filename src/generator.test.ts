@@ -7,10 +7,15 @@ assert.equal(job.scenes.length, 3);
 assert.equal(job.approvals.brief, "pending");
 assert.equal(job.approvals.paidGeneration, "pending");
 assert.equal(job.approvals.publish, "pending");
+assert.equal(job.review?.factual, "pending");
+assert.equal(job.review?.clinical, "pending");
 assert.equal(job.scenes.reduce((total, scene) => total + scene.durationSeconds, 0), 30);
 assert.equal(job.providers?.media, "pixelle");
 assert.equal(job.providers?.voice, "pixelle");
 assert.equal(job.scenes[0]?.visual?.provider, "pixelle");
 assert.equal(job.scenes[0]?.visual?.type, "image");
 assert.equal(job.scenes[0]?.generation?.status, "pending");
+
+const general = await generateJob({prompt: "Create a short video about solar eclipses", durationSeconds: 20});
+assert.equal(general.job.review, undefined);
 console.log("Prompt generator test passed");
