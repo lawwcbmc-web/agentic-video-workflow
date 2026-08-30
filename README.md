@@ -14,6 +14,28 @@ npm start
 
 Open `http://127.0.0.1:3000`, enter one prompt, review the generated scenes, approve the brief, and render the MP4. Demo director mode works without an API key. To opt into OpenAI structured scripting, set `OPENAI_API_KEY`, choose `OPENAI_MODEL`, set `ALLOW_AI_SCRIPTING=true`, and select the OpenAI director checkbox. Keep secrets server-side and review API usage and costs.
 
+## Medical video factory
+
+Create a saved draft from one topic:
+
+```bash
+npm run create -- "TNK vs alteplase in acute ischemic stroke" --ai --duration=60 --audience="Stroke clinicians"
+```
+
+Medical topics are automatically marked for factual and clinical review. Approval flags are blocked during initial generation so unseen content cannot be approved. After reviewing the exact saved job, resume it to render:
+
+```bash
+npm run create -- --job=out/jobs/<job-id>.json --approve-brief --approve-review --render
+```
+
+To add Pixelle-generated assets, also approve external generation for that saved job and enable the environment gate:
+
+```bash
+ALLOW_PAID_GENERATION=true npm run create -- --job=out/jobs/<job-id>.json --approve-brief --approve-review --approve-paid --assets --render
+```
+
+See `docs/MEDICAL_VIDEO_FACTORY.md` for the full workflow and flags. This layer does not yet perform verified literature retrieval or citation validation.
+
 ## Safety model
 
 Every job carries three independent human decisions:
@@ -21,6 +43,8 @@ Every job carries three independent human decisions:
 1. `brief` — required before planning or rendering work begins.
 2. `paidGeneration` — required before any external generation call, plus `ALLOW_PAID_GENERATION=true`.
 3. `publish` — required before publishing, plus `ALLOW_PUBLISHING=true`.
+
+Medical jobs additionally carry factual and clinical review states. Rendering, external asset generation, planning, and publishing are blocked until those reviews are approved.
 
 Approval values are `pending`, `approved`, or `rejected`. Keep both environment flags false in shared and development environments. The two-factor design prevents an edited JSON file alone from authorizing a paid or public action.
 
@@ -71,8 +95,10 @@ Without an approved paid-generation gate, `npm run assets` stops before contacti
 
 ## What is included
 
-- `schemas/job.schema.json` — strict contract for video jobs, including scene visual/audio/generation state.
+- `schemas/job.schema.json` — strict contract for video jobs, including scene visual/audio/generation and medical review state.
 - `src/types.ts` — shared TypeScript job types.
+- `src/factory.ts` — draft/resume factory CLI.
+- `src/review.ts` — medical-topic detection and review enforcement.
 - `jobs/sample-job.json` — vertical public-education example.
 - `prompts/director.md` — reusable director prompt.
 - `src/orchestrator.ts` — validation, planning, asset generation, and approval enforcement.
@@ -109,7 +135,7 @@ Output is written to `out/`, which is intentionally ignored by Git.
 node --import tsx src/orchestrator.ts validate jobs/your-job.json
 ```
 
-6. After a human approves the brief, create the deterministic render plan:
+6. After a human approves the brief (and factual/clinical review when present), create the deterministic render plan:
 
 ```bash
 node --import tsx src/orchestrator.ts plan jobs/your-job.json
@@ -155,4 +181,4 @@ When implementing or extending an adapter:
 
 ## Important limitation
 
-Pixelle support is an initial scene-video bridge. The repository does not bundle Pixelle itself, does not configure its model providers, and does not call Pixelle until you supply a reachable API, configure the required template, explicitly approve paid generation in the job, and enable the environment gate. Canva, HeyGen, and publishing remain placeholders.
+Pixelle support is an initial scene-video bridge. The repository does not bundle Pixelle itself, does not configure its model providers, and does not call Pixelle until you supply a reachable API, configure the required template, explicitly approve paid generation in the job, and enable the environment gate. Canva, HeyGen, and publishing remain placeholders. The medical factory does not yet perform verified literature retrieval or citation validation.

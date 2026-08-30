@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import type {VideoJob} from "./types.js";
+import {isMedicalTopic} from "./review.js";
 
 export type PromptRequest = {prompt: string; audience?: string; durationSeconds?: number; aspectRatio?: "vertical" | "landscape"; useAi?: boolean};
 type ScenePlan = {title: string; objective: string; scenes: Array<{heading: string; body: string; voiceover: string; assetPrompt: string}>};
@@ -19,6 +20,7 @@ const assembleJob = (request: PromptRequest, content: ScenePlan): VideoJob => {
   const total = Math.min(90, Math.max(10, request.durationSeconds ?? 30));
   const perScene = total / content.scenes.length;
   const vertical = request.aspectRatio !== "landscape";
+  const medical = isMedicalTopic(`${request.prompt} ${content.title} ${content.objective}`);
   return {
     id: `${slugify(content.title)}-${Date.now().toString(36)}`,
     title: content.title,
@@ -34,6 +36,7 @@ const assembleJob = (request: PromptRequest, content: ScenePlan): VideoJob => {
       audio: {provider: "pixelle"},
       generation: {status: "pending"}
     })),
+    ...(medical ? {review: {factual: "pending" as const, clinical: "pending" as const}} : {}),
     approvals: {brief: "pending", paidGeneration: "pending", publish: "pending"}
   };
 };
@@ -56,7 +59,7 @@ export const generateJob = async (request: PromptRequest): Promise<{job: VideoJo
   const client = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
   const response = await client.responses.create({
     model: process.env.OPENAI_MODEL || "gpt-5-mini",
-    instructions: "You are a concise video director. Return factual, accessible scenes. Do not invent statistics, citations, diagnoses, or claims. Flag uncertainty for human review.",
+    instructions: "You are a concise video director. Return factual, accessible scenes. Do not invent statistics, citations, diagnoses, or claims. For medical topics, avoid individualized treatment advice and write for subsequent clinician review.",
     input: `Create a ${request.durationSeconds ?? 30}-second ${request.aspectRatio ?? "vertical"} video for ${request.audience || "a general audience"}. Prompt: ${request.prompt}`,
     text: {format: {type: "json_schema", name: "video_scene_plan", strict: true, schema: outputSchema}}
   });

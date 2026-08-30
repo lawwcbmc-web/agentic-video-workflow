@@ -4,6 +4,7 @@ import {spawn} from "node:child_process";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {generateJob, type PromptRequest} from "./generator.js";
+import {assertRequiredReviews} from "./review.js";
 import type {VideoJob} from "./types.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -21,6 +22,7 @@ const readJson = async <T>(req: IncomingMessage): Promise<T> => {
 };
 const render = async (job: VideoJob): Promise<string> => {
   if (job.approvals.brief !== "approved") throw new Error("Approve the brief before rendering.");
+  assertRequiredReviews(job);
   const safeId = job.id.replace(/[^a-z0-9-]/g, "");
   if (!safeId) throw new Error("Invalid job ID.");
   await mkdir(path.join(outDir, "jobs"), {recursive: true});

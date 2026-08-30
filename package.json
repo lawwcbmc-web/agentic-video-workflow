@@ -1,11 +1,12 @@
 {
   "name": "agentic-video-workflow",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node --import tsx src/server.ts",
     "start": "node --import tsx src/server.ts",
+    "create": "node --import tsx src/factory.ts",
     "validate": "node --import tsx src/orchestrator.ts validate jobs/sample-job.json",
     "plan": "node --import tsx src/orchestrator.ts plan jobs/sample-job.json",
     "assets": "node --import tsx src/orchestrator.ts assets jobs/sample-job.json",
