@@ -58,6 +58,7 @@ const main = async () => {
   if (has("--approve-paid")) job.approvals.paidGeneration = "approved";
 
   const jobPath = await writeJob(job);
+  await run("node", ["--import", "tsx", "src/orchestrator.ts", "validate", jobPath]);
   console.log(`${mode === "resume" ? "Updated" : "Created"} ${mode} job: ${jobPath}`);
 
   if (!has("--assets") && !has("--render")) {
