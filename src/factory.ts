@@ -16,7 +16,7 @@ const audience = value("--audience") || "General audience";
 const aspectRatio = has("--landscape") ? "landscape" as const : "vertical" as const;
 
 const run = (command: string, commandArgs: string[]) => new Promise<void>((resolve, reject) => {
-  const executable = process.platform === "win32" ? `${command}.cmd` : command;
+  const executable = process.platform === "win32" && command === "npx" ? "npx.cmd" : command;
   const child = spawn(executable, commandArgs, {stdio: "inherit", env: process.env});
   child.on("error", reject);
   child.on("exit", (code) => code === 0 ? resolve() : reject(new Error(`${command} exited with code ${code}.`)));
