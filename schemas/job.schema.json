@@ -53,10 +53,7 @@
               "provider": {"enum": ["none", "pixelle", "local"]}
             }
           },
-          "citations": {
-            "type": "array",
-            "items": {"type": "string"}
-          },
+          "citations": {"type": "array", "items": {"type": "string"}},
           "generation": {
             "type": "object",
             "additionalProperties": false,
@@ -79,6 +76,15 @@
         "design": {"enum": ["none", "canva-placeholder"]},
         "media": {"enum": ["none", "pixelle"]},
         "voice": {"enum": ["none", "pixelle"]}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factual", "clinical"],
+      "properties": {
+        "factual": {"enum": ["pending", "approved", "rejected"]},
+        "clinical": {"enum": ["pending", "approved", "rejected"]}
       }
     },
     "approvals": {
