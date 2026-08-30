@@ -3,6 +3,7 @@ import path from "node:path";
 import {Ajv2020} from "ajv/dist/2020.js";
 import schema from "../schemas/job.schema.json" with {type: "json"};
 import {generatePixelleSceneVideo} from "./providers/pixelle.js";
+import {assertRequiredReviews} from "./review.js";
 import type {VideoJob} from "./types.js";
 
 const loadJob = async (filename: string): Promise<VideoJob> => {
@@ -15,19 +16,18 @@ const loadJob = async (filename: string): Promise<VideoJob> => {
 
 const assertGate = (job: VideoJob, gate: keyof VideoJob["approvals"], envFlag?: string) => {
   if (job.approvals[gate] !== "approved") throw new Error(`Approval gate "${gate}" is not approved.`);
-  if (envFlag && process.env[envFlag] !== "true") {
-    throw new Error(`${envFlag}=true is also required for this action.`);
-  }
+  if (envFlag && process.env[envFlag] !== "true") throw new Error(`${envFlag}=true is also required for this action.`);
 };
 
 const generateAssets = async (job: VideoJob) => {
+  assertGate(job, "brief");
+  assertRequiredReviews(job);
   assertGate(job, "paidGeneration", "ALLOW_PAID_GENERATION");
   const enriched = structuredClone(job);
 
   for (const scene of enriched.scenes) {
     const provider = scene.visual?.provider;
     if (provider !== "pixelle" || scene.visual?.source) continue;
-
     try {
       const result = await generatePixelleSceneVideo(enriched, scene);
       scene.visual = {...scene.visual, type: "video", source: result.source, provider: "pixelle"};
@@ -55,6 +55,7 @@ const main = async () => {
 
   if (command === "plan") {
     assertGate(job, "brief");
+    assertRequiredReviews(job);
     const totalFrames = Math.round(job.scenes.reduce((sum, scene) => sum + scene.durationSeconds, 0) * job.format.fps);
     await mkdir("out", {recursive: true});
     await writeFile(path.join("out", `${job.id}.plan.json`), JSON.stringify({jobId: job.id, totalFrames, scenes: job.scenes}, null, 2));
@@ -69,6 +70,7 @@ const main = async () => {
 
   if (command === "publish") {
     assertGate(job, "publish", "ALLOW_PUBLISHING");
+    assertRequiredReviews(job);
     console.log("Publishing gate passed; connect a publishing adapter here.");
     return;
   }
