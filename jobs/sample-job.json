@@ -4,11 +4,41 @@
   "objective": "Create a concise public education video explaining the FAST warning signs.",
   "audience": "General public",
   "format": {"width": 1080, "height": 1920, "fps": 30},
-  "providers": {"presenter": "none", "design": "none"},
+  "providers": {"presenter": "none", "design": "none", "media": "pixelle", "voice": "pixelle"},
   "scenes": [
-    {"id": "hook", "durationSeconds": 3, "heading": "Stroke can happen suddenly", "body": "Every minute matters."},
-    {"id": "fast", "durationSeconds": 8, "heading": "Think FAST", "body": "Face drooping • Arm weakness • Speech difficulty • Time to call emergency services."},
-    {"id": "action", "durationSeconds": 4, "heading": "Act immediately", "body": "Note the time symptoms started and seek emergency care."}
+    {
+      "id": "hook",
+      "durationSeconds": 3,
+      "heading": "Stroke can happen suddenly",
+      "body": "Every minute matters.",
+      "voiceover": "Stroke can happen suddenly. Every minute matters.",
+      "assetPrompt": "Urgent but calm public health visual showing sudden stroke symptoms",
+      "visual": {"type": "image", "prompt": "Urgent but calm public health visual showing sudden stroke symptoms", "provider": "pixelle"},
+      "audio": {"provider": "pixelle"},
+      "generation": {"status": "pending"}
+    },
+    {
+      "id": "fast",
+      "durationSeconds": 8,
+      "heading": "Think FAST",
+      "body": "Face drooping • Arm weakness • Speech difficulty • Time to call emergency services.",
+      "voiceover": "Think FAST: face drooping, arm weakness, speech difficulty, and time to call emergency services.",
+      "assetPrompt": "Clear FAST stroke recognition public education graphic",
+      "visual": {"type": "image", "prompt": "Clear FAST stroke recognition public education graphic", "provider": "pixelle"},
+      "audio": {"provider": "pixelle"},
+      "generation": {"status": "pending"}
+    },
+    {
+      "id": "action",
+      "durationSeconds": 4,
+      "heading": "Act immediately",
+      "body": "Note the time symptoms started and seek emergency care.",
+      "voiceover": "Note the time symptoms started and seek emergency care immediately.",
+      "assetPrompt": "Emergency response visual with clock and ambulance, clean medical editorial style",
+      "visual": {"type": "image", "prompt": "Emergency response visual with clock and ambulance, clean medical editorial style", "provider": "pixelle"},
+      "audio": {"provider": "pixelle"},
+      "generation": {"status": "pending"}
+    }
   ],
   "approvals": {"brief": "approved", "paidGeneration": "pending", "publish": "pending"}
 }
