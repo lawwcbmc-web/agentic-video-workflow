@@ -47,6 +47,10 @@ export type VideoJob = {
     media?: "none" | "pixelle";
     voice?: "none" | "pixelle";
   };
+  review?: {
+    factual: Approval;
+    clinical: Approval;
+  };
   approvals: {
     brief: Approval;
     paidGeneration: Approval;
