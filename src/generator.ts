@@ -1,15 +1,9 @@
 import OpenAI from "openai";
+import type {VideoJob} from "./types.js";
 
 export type PromptRequest = {prompt: string; audience?: string; durationSeconds?: number; aspectRatio?: "vertical" | "landscape"; useAi?: boolean};
-export type VideoJob = {
-  id: string; title: string; objective: string; audience: string;
-  format: {width: number; height: number; fps: number};
-  providers: {presenter: "none"; design: "none"};
-  scenes: Array<{id: string; durationSeconds: number; heading: string; body: string; voiceover: string; assetPrompt: string}>;
-  approvals: {brief: "pending" | "approved"; paidGeneration: "pending"; publish: "pending"};
-};
-
 type ScenePlan = {title: string; objective: string; scenes: Array<{heading: string; body: string; voiceover: string; assetPrompt: string}>};
+
 const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "prompt-video";
 const outputSchema = {
   type: "object", additionalProperties: false, required: ["title", "objective", "scenes"],
@@ -26,11 +20,20 @@ const assembleJob = (request: PromptRequest, content: ScenePlan): VideoJob => {
   const perScene = total / content.scenes.length;
   const vertical = request.aspectRatio !== "landscape";
   return {
-    id: `${slugify(content.title)}-${Date.now().toString(36)}`, title: content.title, objective: content.objective,
+    id: `${slugify(content.title)}-${Date.now().toString(36)}`,
+    title: content.title,
+    objective: content.objective,
     audience: request.audience?.trim() || "General audience",
     format: vertical ? {width: 1080, height: 1920, fps: 30} : {width: 1920, height: 1080, fps: 30},
-    providers: {presenter: "none", design: "none"},
-    scenes: content.scenes.map((scene, index) => ({id: `scene-${index + 1}`, durationSeconds: perScene, ...scene})),
+    providers: {presenter: "none", design: "none", media: "pixelle", voice: "pixelle"},
+    scenes: content.scenes.map((scene, index) => ({
+      id: `scene-${index + 1}`,
+      durationSeconds: perScene,
+      ...scene,
+      visual: {type: "image", prompt: scene.assetPrompt, provider: "pixelle"},
+      audio: {provider: "pixelle"},
+      generation: {status: "pending"}
+    })),
     approvals: {brief: "pending", paidGeneration: "pending", publish: "pending"}
   };
 };

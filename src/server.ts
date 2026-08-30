@@ -3,7 +3,8 @@ import {readFile, mkdir, writeFile, access} from "node:fs/promises";
 import {spawn} from "node:child_process";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-import {generateJob, type PromptRequest, type VideoJob} from "./generator.js";
+import {generateJob, type PromptRequest} from "./generator.js";
+import type {VideoJob} from "./types.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const publicDir = path.join(root, "public");

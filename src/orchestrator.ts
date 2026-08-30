@@ -2,31 +2,46 @@ import {readFile, mkdir, writeFile} from "node:fs/promises";
 import path from "node:path";
 import {Ajv2020} from "ajv/dist/2020.js";
 import schema from "../schemas/job.schema.json" with {type: "json"};
+import {generatePixelleSceneVideo} from "./providers/pixelle.js";
+import type {VideoJob} from "./types.js";
 
-type Approval = "pending" | "approved" | "rejected";
-type Job = {
-  id: string;
-  title: string;
-  objective: string;
-  audience: string;
-  format: {width: number; height: number; fps: number};
-  scenes: Array<{id: string; durationSeconds: number; heading: string; body: string}>;
-  approvals: {brief: Approval; paidGeneration: Approval; publish: Approval};
-};
-
-const loadJob = async (filename: string): Promise<Job> => {
+const loadJob = async (filename: string): Promise<VideoJob> => {
   const raw = await readFile(filename, "utf8");
   const job: unknown = JSON.parse(raw);
   const validate = new Ajv2020({allErrors: true, strict: false}).compile(schema);
   if (!validate(job)) throw new Error(JSON.stringify(validate.errors, null, 2));
-  return job as Job;
+  return job as VideoJob;
 };
 
-const assertGate = (job: Job, gate: keyof Job["approvals"], envFlag?: string) => {
+const assertGate = (job: VideoJob, gate: keyof VideoJob["approvals"], envFlag?: string) => {
   if (job.approvals[gate] !== "approved") throw new Error(`Approval gate "${gate}" is not approved.`);
   if (envFlag && process.env[envFlag] !== "true") {
     throw new Error(`${envFlag}=true is also required for this action.`);
   }
+};
+
+const generateAssets = async (job: VideoJob) => {
+  assertGate(job, "paidGeneration", "ALLOW_PAID_GENERATION");
+  const enriched = structuredClone(job);
+
+  for (const scene of enriched.scenes) {
+    const provider = scene.visual?.provider;
+    if (provider !== "pixelle" || scene.visual?.source) continue;
+
+    try {
+      const result = await generatePixelleSceneVideo(enriched, scene);
+      scene.visual = {...scene.visual, type: "video", source: result.source, provider: "pixelle"};
+      scene.generation = {status: "generated", requestId: result.requestId};
+    } catch (error) {
+      scene.generation = {status: "failed", error: error instanceof Error ? error.message : String(error)};
+      throw error;
+    }
+  }
+
+  await mkdir("out", {recursive: true});
+  const output = path.join("out", `${job.id}.assets.json`);
+  await writeFile(output, JSON.stringify(enriched, null, 2));
+  console.log(`Asset-enriched job created: ${output}`);
 };
 
 const main = async () => {
@@ -47,9 +62,8 @@ const main = async () => {
     return;
   }
 
-  if (command === "paid-generate") {
-    assertGate(job, "paidGeneration", "ALLOW_PAID_GENERATION");
-    console.log("Paid generation gate passed; connect a provider adapter here.");
+  if (command === "assets" || command === "paid-generate") {
+    await generateAssets(job);
     return;
   }
 

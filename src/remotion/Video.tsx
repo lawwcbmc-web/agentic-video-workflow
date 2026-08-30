@@ -1,19 +1,39 @@
 import React from "react";
-import {AbsoluteFill, Sequence, interpolate, useCurrentFrame} from "remotion";
+import {AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, interpolate, staticFile, useCurrentFrame} from "remotion";
+import type {VideoJob, VideoScene} from "../types.js";
 
-export type VideoJob = {
-  title: string;
-  format: {width: number; height: number; fps: number};
-  scenes: Array<{id: string; durationSeconds: number; heading: string; body: string}>;
+const resolveAssetSource = (source?: string) => {
+  if (!source) return undefined;
+  if (/^(https?:|data:|blob:)/i.test(source)) return source;
+  return staticFile(source.replace(/^\/+/, ""));
 };
 
-const Scene: React.FC<{heading: string; body: string; duration: number}> = ({heading, body, duration}) => {
+const TextOverlay: React.FC<{heading: string; body: string; duration: number}> = ({heading, body, duration}) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 12, duration - 12, duration], [0, 1, 1, 0], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
+  const opacity = interpolate(frame, [0, 12, Math.max(12, duration - 12), duration], [0, 1, 1, 0], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
   return (
-    <AbsoluteFill style={{background: "linear-gradient(145deg,#071b33,#0f6b78)", color: "white", justifyContent: "center", padding: 90, opacity}}>
+    <AbsoluteFill style={{justifyContent: "flex-end", padding: 90, opacity, background: "linear-gradient(180deg,transparent 35%,rgba(0,0,0,.78))", color: "white"}}>
       <div style={{fontFamily: "Arial, sans-serif", fontSize: 78, fontWeight: 800, lineHeight: 1.05}}>{heading}</div>
       <div style={{fontFamily: "Arial, sans-serif", fontSize: 42, lineHeight: 1.35, marginTop: 36}}>{body}</div>
+    </AbsoluteFill>
+  );
+};
+
+const Scene: React.FC<{scene: VideoScene; duration: number}> = ({scene, duration}) => {
+  const visualSource = resolveAssetSource(scene.visual?.source);
+  const audioSource = resolveAssetSource(scene.audio?.source);
+  const visualType = scene.visual?.type ?? "text";
+
+  return (
+    <AbsoluteFill style={{background: "linear-gradient(145deg,#071b33,#0f6b78)"}}>
+      {visualSource && visualType === "image" ? (
+        <Img src={visualSource} style={{width: "100%", height: "100%", objectFit: "cover"}} />
+      ) : null}
+      {visualSource && (visualType === "video" || visualType === "presenter") ? (
+        <OffthreadVideo src={visualSource} style={{width: "100%", height: "100%", objectFit: "cover"}} />
+      ) : null}
+      {audioSource ? <Audio src={audioSource} /> : null}
+      <TextOverlay heading={scene.heading} body={scene.body} duration={duration} />
     </AbsoluteFill>
   );
 };
@@ -28,7 +48,7 @@ export const MainVideo: React.FC<VideoJob> = ({scenes, format}) => {
         cursor += duration;
         return (
           <Sequence key={scene.id} from={from} durationInFrames={duration}>
-            <Scene heading={scene.heading} body={scene.body} duration={duration} />
+            <Scene scene={scene} duration={duration} />
           </Sequence>
         );
       })}
