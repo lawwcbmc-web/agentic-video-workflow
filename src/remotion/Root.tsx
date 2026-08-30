@@ -1,6 +1,7 @@
 import React from "react";
 import {Composition, type CalculateMetadataFunction} from "remotion";
-import {MainVideo, type VideoJob} from "./Video.js";
+import {MainVideo} from "./Video.js";
+import type {VideoJob} from "../types.js";
 import sample from "../../jobs/sample-job.json" with {type: "json"};
 
 export const VideoRoot: React.FC = () => {
