@@ -53,7 +53,8 @@
               "provider": {"enum": ["none", "pixelle", "local"]}
             }
           },
-          "citations": {"type": "array", "items": {"type": "string"}},
+          "citations": {"type": "array", "maxItems": 3, "uniqueItems": true, "items": {"type": "string"}},
+          "evidenceExcerpts": {"$ref": "#/$defs/evidenceExcerpts"},
           "generation": {
             "type": "object",
             "additionalProperties": false,
@@ -78,13 +79,15 @@
         "voice": {"enum": ["none", "pixelle"]}
       }
     },
+    "evidence": {"$ref": "#/$defs/evidenceBundle"},
     "review": {
       "type": "object",
       "additionalProperties": false,
       "required": ["factual", "clinical"],
       "properties": {
         "factual": {"enum": ["pending", "approved", "rejected"]},
-        "clinical": {"enum": ["pending", "approved", "rejected"]}
+        "clinical": {"enum": ["pending", "approved", "rejected"]},
+        "contentSnapshot": {"type": "string", "minLength": 1}
       }
     },
     "approvals": {
@@ -96,6 +99,140 @@
         "paidGeneration": {"enum": ["pending", "approved", "rejected"]},
         "publish": {"enum": ["pending", "approved", "rejected"]}
       }
+    }
+  },
+  "$defs": {
+    "evidenceExcerpts": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sourceId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "excerpt": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "sourceId",
+          "excerpt"
+        ]
+      }
+    },
+    "evidenceBundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "const": "europe-pmc"
+        },
+        "query": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 500
+        },
+        "retrievedAt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^pubmed-[1-9][0-9]{0,8}$"
+              },
+              "pmid": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]{0,8}$"
+              },
+              "doi": {
+                "type": "string",
+                "pattern": "^10\\.[0-9]{4,9}/\\S+$"
+              },
+              "url": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authors": {
+                "type": "string",
+                "minLength": 1
+              },
+              "journal": {
+                "type": "string",
+                "minLength": 1
+              },
+              "year": {
+                "type": "integer",
+                "minimum": 1900,
+                "maximum": 2100
+              },
+              "abstract": {
+                "type": "string",
+                "minLength": 20,
+                "maxLength": 30000
+              },
+              "publicationTypes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "id",
+              "pmid",
+              "url",
+              "title",
+              "authors",
+              "journal",
+              "year",
+              "abstract",
+              "publicationTypes"
+            ]
+          }
+        },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "checkedAt": {
+              "type": "string",
+              "minLength": 1
+            },
+            "snapshot": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "checkedAt",
+            "snapshot"
+          ]
+        }
+      },
+      "required": [
+        "provider",
+        "query",
+        "retrievedAt",
+        "sources"
+      ]
     }
   }
 }

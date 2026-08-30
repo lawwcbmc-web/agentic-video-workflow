@@ -1,7 +1,6 @@
 import {readFile, mkdir, writeFile} from "node:fs/promises";
 import path from "node:path";
-import {Ajv2020} from "ajv/dist/2020.js";
-import schema from "../schemas/job.schema.json" with {type: "json"};
+import {assertJobSchema} from "./validation.js";
 import {generatePixelleSceneVideo} from "./providers/pixelle.js";
 import {assertRequiredReviews} from "./review.js";
 import type {VideoJob} from "./types.js";
@@ -9,8 +8,7 @@ import type {VideoJob} from "./types.js";
 const loadJob = async (filename: string): Promise<VideoJob> => {
   const raw = await readFile(filename, "utf8");
   const job: unknown = JSON.parse(raw);
-  const validate = new Ajv2020({allErrors: true, strict: false}).compile(schema);
-  if (!validate(job)) throw new Error(JSON.stringify(validate.errors, null, 2));
+  assertJobSchema(job);
   return job as VideoJob;
 };
 
@@ -58,7 +56,7 @@ const main = async () => {
     assertRequiredReviews(job);
     const totalFrames = Math.round(job.scenes.reduce((sum, scene) => sum + scene.durationSeconds, 0) * job.format.fps);
     await mkdir("out", {recursive: true});
-    await writeFile(path.join("out", `${job.id}.plan.json`), JSON.stringify({jobId: job.id, totalFrames, scenes: job.scenes}, null, 2));
+    await writeFile(path.join("out", `${job.id}.plan.json`), JSON.stringify({jobId: job.id, totalFrames, scenes: job.scenes, evidence: job.evidence}, null, 2));
     console.log(`Plan created for ${job.id}: ${totalFrames} frames`);
     return;
   }

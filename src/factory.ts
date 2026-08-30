@@ -2,7 +2,9 @@ import {mkdir, readFile, writeFile} from "node:fs/promises";
 import {spawn} from "node:child_process";
 import path from "node:path";
 import {generateJob} from "./generator.js";
-import {assertRequiredReviews} from "./review.js";
+import {attachEvidence, retrieveEvidence, validateEvidence} from "./evidence.js";
+import {assertJobSchema} from "./validation.js";
+import {approveMedicalReview, assertRequiredReviews} from "./review.js";
 import type {VideoJob} from "./types.js";
 
 const args = process.argv.slice(2);
@@ -34,29 +36,37 @@ const writeJob = async (job: VideoJob) => {
   return filename;
 };
 
-const loadJob = async (filename: string): Promise<VideoJob> => JSON.parse(await readFile(filename, "utf8")) as VideoJob;
+const loadJob = async (filename: string): Promise<VideoJob> => {
+  const job: unknown = JSON.parse(await readFile(filename, "utf8"));
+  assertJobSchema(job);
+  return job;
+};
 
 const main = async () => {
+  const evidenceAction = has("--evidence") || has("--validate-evidence");
+  if (evidenceAction && (approvalFlags.some(has) || has("--render") || has("--assets"))) throw new Error("Evidence changes require a separate saved-job review; do not combine evidence flags with approval, assets, or rendering.");
+  if (has("--evidence") && has("--validate-evidence")) throw new Error("Retrieve evidence, link scenes, then validate in separate steps.");
+  if (has("--validate-evidence") && !jobInput) throw new Error("Validate evidence only on a saved job with scene citations.");
   let job: VideoJob;
   let mode: "demo" | "openai" | "resume";
 
   if (jobInput) {
     job = await loadJob(jobInput);
     mode = "resume";
+    if (has("--evidence")) job = attachEvidence(job, await retrieveEvidence(value("--evidence-query") || job.title));
+    if (has("--validate-evidence")) job = await validateEvidence(job);
   } else {
     if (approvalFlags.some(has)) throw new Error("Approval flags cannot be applied to newly generated content. Create the draft first, review it, then resume with --job=<path>.");
-    const generated = await generateJob({prompt: topic as string, audience, durationSeconds, aspectRatio, useAi: has("--ai")});
+    const generated = await generateJob({prompt: topic as string, audience, durationSeconds, aspectRatio, useAi: has("--ai"), retrieveEvidence: has("--evidence"), evidenceQuery: value("--evidence-query")});
     job = generated.job;
     mode = generated.mode;
   }
 
   if (has("--approve-brief")) job.approvals.brief = "approved";
-  if (has("--approve-review") && job.review) {
-    job.review.factual = "approved";
-    job.review.clinical = "approved";
-  }
+  if (has("--approve-review")) approveMedicalReview(job);
   if (has("--approve-paid")) job.approvals.paidGeneration = "approved";
 
+  assertJobSchema(job);
   const jobPath = await writeJob(job);
   await run("node", ["--import", "tsx", "src/orchestrator.ts", "validate", jobPath]);
   console.log(`${mode === "resume" ? "Updated" : "Created"} ${mode} job: ${jobPath}`);

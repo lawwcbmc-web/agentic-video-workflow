@@ -2,6 +2,27 @@ export type Approval = "pending" | "approved" | "rejected";
 export type VisualType = "text" | "image" | "video" | "chart" | "presenter";
 export type AssetProvider = "none" | "pixelle" | "local" | "heygen" | "canva";
 
+export type EvidenceSource = {
+  id: string;
+  pmid: string;
+  doi?: string;
+  url: string;
+  title: string;
+  authors: string;
+  journal: string;
+  year: number;
+  abstract: string;
+  publicationTypes: string[];
+};
+
+export type EvidenceBundle = {
+  provider: "europe-pmc";
+  query: string;
+  retrievedAt: string;
+  sources: EvidenceSource[];
+  validation?: {checkedAt: string; snapshot: string};
+};
+
 export type SceneVisual = {
   type: VisualType;
   prompt?: string;
@@ -31,6 +52,7 @@ export type VideoScene = {
   visual?: SceneVisual;
   audio?: SceneAudio;
   citations?: string[];
+  evidenceExcerpts?: Array<{sourceId: string; excerpt: string}>;
   generation?: GenerationState;
 };
 
@@ -41,6 +63,7 @@ export type VideoJob = {
   audience: string;
   format: {width: number; height: number; fps: number};
   scenes: VideoScene[];
+  evidence?: EvidenceBundle;
   providers?: {
     presenter?: "none" | "heygen-placeholder";
     design?: "none" | "canva-placeholder";
@@ -50,6 +73,7 @@ export type VideoJob = {
   review?: {
     factual: Approval;
     clinical: Approval;
+    contentSnapshot?: string;
   };
   approvals: {
     brief: Approval;
