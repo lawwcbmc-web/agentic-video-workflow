@@ -33,7 +33,41 @@
           "heading": {"type": "string"},
           "body": {"type": "string"},
           "voiceover": {"type": "string"},
-          "assetPrompt": {"type": "string"}
+          "assetPrompt": {"type": "string"},
+          "visual": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type"],
+            "properties": {
+              "type": {"enum": ["text", "image", "video", "chart", "presenter"]},
+              "prompt": {"type": "string"},
+              "source": {"type": "string"},
+              "provider": {"enum": ["none", "pixelle", "local", "heygen", "canva"]}
+            }
+          },
+          "audio": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source": {"type": "string"},
+              "provider": {"enum": ["none", "pixelle", "local"]}
+            }
+          },
+          "citations": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "generation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status"],
+            "properties": {
+              "status": {"enum": ["pending", "generated", "failed"]},
+              "requestId": {"type": "string"},
+              "estimatedCostUsd": {"type": "number", "minimum": 0},
+              "error": {"type": "string"}
+            }
+          }
         }
       }
     },
@@ -42,7 +76,9 @@
       "additionalProperties": false,
       "properties": {
         "presenter": {"enum": ["none", "heygen-placeholder"]},
-        "design": {"enum": ["none", "canva-placeholder"]}
+        "design": {"enum": ["none", "canva-placeholder"]},
+        "media": {"enum": ["none", "pixelle"]},
+        "voice": {"enum": ["none", "pixelle"]}
       }
     },
     "approvals": {
