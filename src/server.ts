@@ -4,6 +4,7 @@ import {spawn} from "node:child_process";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {generateJob, type PromptRequest} from "./generator.js";
+import {assertJobSchema} from "./validation.js";
 import {assertRequiredReviews} from "./review.js";
 import type {VideoJob} from "./types.js";
 
@@ -17,10 +18,11 @@ const send = (res: ServerResponse, status: number, body: unknown, type = "applic
 };
 const readJson = async <T>(req: IncomingMessage): Promise<T> => {
   const chunks: Buffer[] = []; let size = 0;
-  for await (const chunk of req) {size += chunk.length; if (size > 100_000) throw new Error("Request is too large."); chunks.push(chunk);}
+  for await (const chunk of req) {size += chunk.length; if (size > 2_000_000) throw new Error("Request is too large."); chunks.push(chunk);}
   return JSON.parse(Buffer.concat(chunks).toString("utf8")) as T;
 };
 const render = async (job: VideoJob): Promise<string> => {
+  assertJobSchema(job);
   if (job.approvals.brief !== "approved") throw new Error("Approve the brief before rendering.");
   assertRequiredReviews(job);
   const safeId = job.id.replace(/[^a-z0-9-]/g, "");

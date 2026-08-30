@@ -40,5 +40,6 @@
       "generation": {"status": "pending"}
     }
   ],
-  "approvals": {"brief": "approved", "paidGeneration": "pending", "publish": "pending"}
+  "review": {"factual": "pending", "clinical": "pending"},
+  "approvals": {"brief": "pending", "paidGeneration": "pending", "publish": "pending"}
 }

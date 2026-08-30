@@ -15,16 +15,18 @@
     "check:ffmpeg": "node scripts/check-ffmpeg.mjs",
     "typecheck": "tsc --noEmit",
     "test:generator": "node --import tsx src/generator.test.ts",
-    "test": "npm run typecheck && npm run validate && npm run test:generator && npm run check:ffmpeg"
+    "test": "npm run typecheck && npm run validate && npm run test:generator && npm run test:evidence && npm run check:ffmpeg && npm run test:bundle",
+    "test:evidence": "node --import tsx --test src/evidence.test.ts",
+    "test:bundle": "remotion bundle src/remotion/index.ts --out-dir=out/remotion-bundle"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.0",
     "@remotion/renderer": "^4.0.0",
     "ajv": "^8.17.1",
     "openai": "^5.0.0",
-    "remotion": "^4.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

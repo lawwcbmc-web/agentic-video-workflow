@@ -19,10 +19,16 @@ Open `http://127.0.0.1:3000`, enter one prompt, review the generated scenes, app
 Create a saved draft from one topic:
 
 ```bash
-npm run create -- "TNK vs alteplase in acute ischemic stroke" --ai --duration=60 --audience="Stroke clinicians"
+npm run create -- "TNK vs alteplase in acute ischemic stroke" --ai --evidence --evidence-query="tenecteplase alteplase stroke" --duration=60 --audience="Stroke clinicians"
 ```
 
-Medical topics are automatically marked for factual and clinical review. Approval flags are blocked during initial generation so unseen content cannot be approved. After reviewing the exact saved job, resume it to render:
+Medical topics require retrieved evidence, scene citations, and human factual and clinical review before rendering. The AI director receives the retrieved abstracts but cannot validate or approve its own output. Check every scene's `citations` and `evidenceExcerpts`, then validate the saved draft:
+
+```bash
+npm run create -- --job=out/jobs/<job-id>.json --validate-evidence
+```
+
+Validation re-fetches PubMed identities and compares metadata and excerpts. It leaves human reviews pending. After a qualified reviewer has checked the exact saved job, resume it to render:
 
 ```bash
 npm run create -- --job=out/jobs/<job-id>.json --approve-brief --approve-review --render
@@ -34,7 +40,7 @@ To add Pixelle-generated assets, also approve external generation for that saved
 ALLOW_PAID_GENERATION=true npm run create -- --job=out/jobs/<job-id>.json --approve-brief --approve-review --approve-paid --assets --render
 ```
 
-See `docs/MEDICAL_VIDEO_FACTORY.md` for the full workflow and flags. This layer does not yet perform verified literature retrieval or citation validation.
+See `docs/MEDICAL_VIDEO_FACTORY.md` for the full workflow and flags. See `docs/EVIDENCE.md` for retrieval, validation, limitations, and migration of existing jobs.
 
 ## Safety model
 
@@ -44,7 +50,7 @@ Every job carries three independent human decisions:
 2. `paidGeneration` — required before any external generation call, plus `ALLOW_PAID_GENERATION=true`.
 3. `publish` — required before publishing, plus `ALLOW_PUBLISHING=true`.
 
-Medical jobs additionally carry factual and clinical review states. Rendering, external asset generation, planning, and publishing are blocked until those reviews are approved.
+Medical jobs additionally carry factual and clinical review states bound to the saved script and evidence. Rendering (including direct Remotion), external asset generation, planning, and publishing require validated scene citations and both human reviews. Evidence expires after 30 days. Refreshing or revalidating evidence resets approvals; edits invalidate content snapshots. These local snapshots detect changes but do not authenticate reviewers.
 
 Approval values are `pending`, `approved`, or `rejected`. Keep both environment flags false in shared and development environments. The two-factor design prevents an edited JSON file alone from authorizing a paid or public action.
 
@@ -66,7 +72,7 @@ flowchart TD
 
 ## Pixelle-Video integration
 
-Pixelle is treated as a replaceable asset backend rather than the master compositor. Generated scene video is written back into an asset-enriched job, which Remotion then renders deterministically with text overlays and any future charts/citations.
+Pixelle is treated as a replaceable asset backend rather than the master compositor. Generated scene video is written back into an asset-enriched job, which Remotion then renders deterministically with text overlays and scene-level PMID/year citation footers.
 
 Configure a reachable Pixelle API in `.env`:
 
@@ -98,7 +104,10 @@ Without an approved paid-generation gate, `npm run assets` stops before contacti
 - `schemas/job.schema.json` — strict contract for video jobs, including scene visual/audio/generation and medical review state.
 - `src/types.ts` — shared TypeScript job types.
 - `src/factory.ts` — draft/resume factory CLI.
-- `src/review.ts` — medical-topic detection and review enforcement.
+- `src/review.ts` — medical-topic detection and content-bound review enforcement.
+- `src/evidence.ts` — bounded Europe PMC retrieval and source identity revalidation.
+- `src/citations.ts` — scene citation, excerpt, freshness, and edit checks.
+- `docs/EVIDENCE.md` — evidence workflow and its clinical limitations.
 - `jobs/sample-job.json` — vertical public-education example.
 - `prompts/director.md` — reusable director prompt.
 - `src/orchestrator.ts` — validation, planning, asset generation, and approval enforcement.
@@ -117,8 +126,8 @@ Requirements: Node.js 22+, npm, and FFmpeg.
 cp .env.example .env
 npm install
 npm test
-npm run plan
-npm run render
+# The stroke sample is an unapproved draft: plan/render intentionally block.
+# Complete the evidence and human-review workflow before rendering.
 ```
 
 Output is written to `out/`, which is intentionally ignored by Git.
@@ -135,7 +144,7 @@ Output is written to `out/`, which is intentionally ignored by Git.
 node --import tsx src/orchestrator.ts validate jobs/your-job.json
 ```
 
-6. After a human approves the brief (and factual/clinical review when present), create the deterministic render plan:
+6. For medical jobs, complete `docs/EVIDENCE.md` first. After a human approves the brief and required reviews, create the deterministic render plan:
 
 ```bash
 node --import tsx src/orchestrator.ts plan jobs/your-job.json
@@ -176,9 +185,9 @@ When implementing or extending an adapter:
 - Download or cache generated media for reproducible rendering rather than depending indefinitely on provider URLs.
 - Scan generated media and verify rights for uploaded assets.
 - Add caption, accessibility, factual, privacy, and clinical/legal reviews as applicable.
-- Pin dependency versions and commit a reviewed lockfile before production deployment.
+- Use the committed lockfile (`npm ci`) and review dependency updates before production deployment.
 - Publish through least-privilege service accounts.
 
 ## Important limitation
 
-Pixelle support is an initial scene-video bridge. The repository does not bundle Pixelle itself, does not configure its model providers, and does not call Pixelle until you supply a reachable API, configure the required template, explicitly approve paid generation in the job, and enable the environment gate. Canva, HeyGen, and publishing remain placeholders. The medical factory does not yet perform verified literature retrieval or citation validation.
+Pixelle support is an initial scene-video bridge. The repository does not bundle Pixelle itself, does not configure its model providers, and does not call Pixelle until you supply a reachable API, configure the required template, explicitly approve paid generation in the job, and enable the environment gate. Canva, HeyGen, and publishing remain placeholders. Evidence validation checks source identity and exact abstract excerpts, not clinical truth, full-text support, guideline currency, or exhaustive retraction coverage. A qualified human must assess every medical claim and its applicability. The included stroke sample is intentionally unapproved and has no prevalidated citations.
